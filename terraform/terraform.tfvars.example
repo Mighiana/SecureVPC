@@ -1,0 +1,23 @@
+# Copy to terraform.tfvars (git-ignored) and fill in.
+#   cp terraform.tfvars.example terraform.tfvars
+
+aws_region  = "us-east-1"
+environment = "lab"
+
+# Your public IP as a /32. Find it with: curl -s https://checkip.amazonaws.com
+admin_cidrs = ["203.0.113.10/32"]
+
+# Contents of the PUBLIC key only, e.g. from:
+#   ssh-keygen -t ed25519 -f ~/.ssh/securevpc -C securevpc
+#   cat ~/.ssh/securevpc.pub
+ssh_public_key = "ssh-ed25519 AAAA...replace-me... securevpc"
+
+# Optional cost guardrail (AWS Budgets; first two budgets per account are free).
+# budget_alert_email = "you@example.com"
+# monthly_budget_usd = 20
+
+# Optional extras
+# enable_kms_encryption      = true
+# enable_s3_flow_log_archive = false
+# flow_logs_retention_days   = 14
+# extra_tags = { Owner = "your-name" }

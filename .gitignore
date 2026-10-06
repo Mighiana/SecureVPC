@@ -1,0 +1,35 @@
+# Terraform
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+*.tfplan
+tfplan
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+
+# Variables may contain your IP / email; only the example is committed.
+*.tfvars
+*.tfvars.json
+!*.tfvars.example
+
+# Real backend config
+terraform/backend.tf
+
+# Keys and credentials must never be committed
+*.pem
+*.key
+id_*
+!id_*.pub
+.env
+
+# Local tooling
+.DS_Store
+.idea/
+.vscode/
+__pycache__/

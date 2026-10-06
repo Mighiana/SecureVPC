@@ -1,0 +1,14 @@
+# Optional remote state. Local state is fine for a single-person lab; use this
+# for shared or long-lived environments. Copy to backend.tf (git-ignored), edit,
+# then run `terraform init -migrate-state`. The bucket must already exist, with
+# versioning and encryption enabled.
+
+terraform {
+  backend "s3" {
+    bucket       = "your-tfstate-bucket"
+    key          = "securevpc/lab/terraform.tfstate"
+    region       = "us-east-1"
+    encrypt      = true
+    use_lockfile = true # Terraform >= 1.10; otherwise use dynamodb_table
+  }
+}
