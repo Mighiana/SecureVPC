@@ -2,8 +2,10 @@
 
 These files are the evidence from the original SecureVPC project, which was built by hand in the
 AWS Management Console. They are the contents of the first commit in this repository
-([`469a821`](https://github.com/Mighiana/SecureVPC/commit/469a821)). Files were only moved into
-this folder; their contents are unchanged.
+([`469a821`](https://github.com/Mighiana/SecureVPC/commit/469a821)). Files were moved into this
+folder in 2026. The only edit was redacting the AWS account ID and a home IP address, which are
+blacked out in the screenshots and replaced with `[REDACTED]` in `readme.md.txt`. Nothing else
+changed. (The AWS account has since been closed.)
 
 `readme.md.txt` holds the original setup notes. Screenshots, in the order they were taken:
 

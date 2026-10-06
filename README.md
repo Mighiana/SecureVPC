@@ -9,7 +9,7 @@ Flow Logs to CloudWatch control and record traffic between the tiers.
 
 > **Provenance.** I first built SecureVPC by hand in the AWS console in August 2025. That build is
 > the first commit of this repository, and its notes and screenshots are kept unchanged in
-> [`original-2025/`](original-2025/). After I lost the local working files, I rebuilt the same
+> [`original-2025/`](original-2025/), with the account ID and a home IP redacted. After I lost the local working files, I rebuilt the same
 > architecture as Terraform in October 2026. Everything outside `original-2025/` belongs to that
 > reconstruction and was committed in 2026. No history was rewritten or backdated.
 > [Reconstruction notes](#reconstruction-notes) lists what was kept and what changed.
@@ -35,6 +35,7 @@ deployed resources are the 2025 console ones.
 - [Cost awareness](#cost-awareness)
 - [Technical decisions](#technical-decisions)
 - [Reconstruction notes](#reconstruction-notes)
+- [Development environment](#development-environment)
 - [Static checks / CI](#static-checks--ci)
 
 ## Problem
@@ -173,7 +174,8 @@ All of these are in code and checked by the tests in
 │   │   └── flow_logs/  # Flow Logs, CloudWatch, IAM, KMS, optional S3
 │   └── tests/securevpc.tftest.hcl   # offline tests with a mocked AWS provider
 ├── scripts/
-│   ├── check.sh        # fmt, validate, test, tflint, checkov
+│   ├── bootstrap.sh    # pinned, checksum-verified dev tools
+│   ├── check.sh        # fmt, validate, test, tflint, checkov, shellcheck
 │   ├── verify.sh       # read-only checks of a live deployment
 │   └── cost-check.sh   # confirm nothing billable is left after destroy
 ├── docs/architecture.svg / .png
@@ -184,7 +186,7 @@ All of these are in code and checked by the tests in
 ## Deployment
 
 **Prerequisites**
-- Terraform ≥ 1.7 (CI uses 1.9.8)
+- Terraform ≥ 1.7 (CI uses 1.9.8; `make bootstrap` installs it)
 - AWS CLI v2 with credentials for a **non-production** account. The identity needs permission to
   manage VPC, EC2, IAM roles, CloudWatch Logs and KMS, and S3/Budgets if you enable those.
 - An SSH key pair. Only the public half is used:
@@ -313,15 +315,39 @@ screenshots), and what the reconstruction changes:
 | S3 | Not used | Optional archive, off by default |
 | Cost controls | None | Budget alert, tags, teardown + cost-check script |
 
+## Development environment
+
+```bash
+make bootstrap                                  # scripts/bootstrap.sh
+terraform -chdir=terraform init -backend=false
+make check
+```
+
+`scripts/bootstrap.sh` installs the CI tool versions into `~/.local/bin`. It is idempotent, so it
+skips tools that are already present.
+
+| Tool | Version | How it's verified |
+|---|---|---|
+| Terraform | 1.9.8 | release zip, pinned SHA-256 |
+| TFLint | 0.53.0 | release zip, pinned SHA-256 |
+| tflint-ruleset-aws | 0.34.0 | release zip, pinned SHA-256, installed into `~/.tflint.d/plugins` so `tflint --init` doesn't need the GitHub API |
+| Checkov | 3.3.23 | pinned version, `pip install --user` |
+| ShellCheck | 0.11.0 (`shellcheck-py` 0.11.0.1) | pinned version, `pip install --user` |
+
+Checksums are hardcoded in the script, copied from each project's published `SHA256SUMS` /
+`checksums.txt`. A download that doesn't match aborts the install. The script pins `linux_amd64`
+only. Add `~/.local/bin` to `PATH` if it isn't already there.
+
 ## Static checks / CI
 
 ```bash
 make check     # no AWS credentials needed
 ```
 
-runs `terraform fmt -check`, `terraform validate`, `terraform test` (mocked AWS provider), TFLint
-with the AWS ruleset, and Checkov. GitHub Actions runs the same on every push and PR
-([`.github/workflows/terraform.yml`](.github/workflows/terraform.yml)).
+runs `terraform fmt -check`, `terraform validate`, `terraform test`, TFLint with the AWS ruleset,
+Checkov and ShellCheck. GitHub Actions runs the same on every push and PR
+([`.github/workflows/terraform.yml`](.github/workflows/terraform.yml)). `terraform test` runs
+offline with a mocked AWS provider and mocked resource ARNs.
 
 The `terraform test` suite plans and applies the stack against a mocked provider. It asserts the
 segmentation (routes, NAT placement, no public IP on the web server), the SG-to-SG reference, the

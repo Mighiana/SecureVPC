@@ -1,6 +1,6 @@
 SecureVPC Project
 Overview
-This project sets up a secure AWS Virtual Private Cloud (VPC) named securevpc-usman in the us-east-1 region (account ID 505679504699). The VPC includes a public subnet hosting a Bastion Host for SSH access, a private subnet hosting a Web Server, and VPC Flow Logs to monitor network traffic. Security is enforced through Security Groups and Network ACLs (NACLs), ensuring only authorized access (SSH to Bastion Host from a specific IP, SSH and HTTP to Web Server from Bastion Host, and blocking external access to the Web Server).
+This project sets up a secure AWS Virtual Private Cloud (VPC) named securevpc-usman in the us-east-1 region (account ID [REDACTED]). The VPC includes a public subnet hosting a Bastion Host for SSH access, a private subnet hosting a Web Server, and VPC Flow Logs to monitor network traffic. Security is enforced through Security Groups and Network ACLs (NACLs), ensuring only authorized access (SSH to Bastion Host from a specific IP, SSH and HTTP to Web Server from Bastion Host, and blocking external access to the Web Server).
 Architecture
 
 VPC: securevpc-usman (e.g., vpc-12345678, CIDR 10.0.0.0/16)
@@ -17,7 +17,7 @@ WebServer: Amazon Linux 2, t2.micro, private IP 10.0.2.164, no public IP, Securi
 
 
 Security Groups:
-BastionSG: Allows SSH (port 22) from <your-ip>/32 (e.g., 203.0.113.1/32 or 45.45.224.90/32)
+BastionSG: Allows SSH (port 22) from <your-ip>/32 (e.g., 203.0.113.1/32 or [REDACTED]/32)
 WebServerSG: Allows SSH (port 22) and HTTP (port 80) from BastionSG
 
 
