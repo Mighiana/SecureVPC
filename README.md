@@ -14,6 +14,12 @@ Flow Logs to CloudWatch control and record traffic between the tiers.
 > reconstruction and was committed in 2026. No history was rewritten or backdated.
 > [Reconstruction notes](#reconstruction-notes) lists what was kept and what changed.
 
+> **Advanced profile (2026 extension).** [`terraform/advanced/`](terraform/advanced/) is a
+> separate, clearly new design built on the same idea: 2 AZs and five subnet tiers, AWS Network
+> Firewall, WAF on an ALB, Route 53 DNS Firewall, VPC endpoints, SSM Session Manager instead of
+> SSH, flow logs to Athena, and CloudWatch alarms → SNS. It was **not** part of the 2025 build.
+> See [`docs/advanced.md`](docs/advanced.md).
+
 **Status:** the Terraform passes `fmt`, `validate`, mocked `terraform test`, TFLint and Checkov in CI.
 The reconstruction **has not been applied to a live AWS account yet**. The only screenshots of
 deployed resources are the 2025 console ones.
@@ -37,6 +43,7 @@ deployed resources are the 2025 console ones.
 - [Reconstruction notes](#reconstruction-notes)
 - [Development environment](#development-environment)
 - [Static checks / CI](#static-checks--ci)
+- [Advanced profile](#advanced-profile)
 
 ## Problem
 
@@ -171,14 +178,19 @@ All of these are in code and checked by the tests in
 │   │   ├── network/    # VPC, subnets, IGW, NAT, routes, NACLs, default SG
 │   │   ├── security/   # bastion-sg, web-sg and their rules
 │   │   ├── compute/    # key pair, bastion, web server, user-data templates
-│   │   └── flow_logs/  # Flow Logs, CloudWatch, IAM, KMS, optional S3
-│   └── tests/securevpc.tftest.hcl   # offline tests with a mocked AWS provider
+│   │   ├── flow_logs/  # Flow Logs, CloudWatch, IAM, KMS, optional S3
+│   │   └── tiered_network/ network_firewall/ tier_security/ vpc_endpoints/
+│   │       dns_firewall/ web_tier/ flow_log_analytics/   # used by advanced/ only
+│   ├── tests/securevpc.tftest.hcl   # offline tests with a mocked AWS provider
+│   └── advanced/                    # 2026 advanced profile (root module + tests)
 ├── scripts/
 │   ├── bootstrap.sh    # pinned, checksum-verified dev tools
 │   ├── check.sh        # fmt, validate, test, tflint, checkov, shellcheck
 │   ├── verify.sh       # read-only checks of a live deployment
-│   └── cost-check.sh   # confirm nothing billable is left after destroy
-├── docs/architecture.svg / .png
+│   ├── cost-check.sh   # confirm nothing billable is left after destroy
+│   ├── verify-advanced.sh  # read-only checks of a live advanced deployment
+│   └── reachability.sh     # Reachability Analyzer paths for the advanced profile
+├── docs/architecture.svg / .png, architecture-advanced.svg / .png, advanced.md
 ├── original-2025/      # unchanged notes + screenshots from the console build
 └── Makefile
 ```
@@ -346,7 +358,8 @@ only. Add `~/.local/bin` to `PATH` if it isn't already there.
 make check     # no AWS credentials needed
 ```
 
-runs `terraform fmt -check`, `terraform validate`, `terraform test`, TFLint with the AWS ruleset,
+runs `terraform fmt -check`, then `terraform validate` and `terraform test` for both root modules
+(`terraform/` and `terraform/advanced/`), then TFLint with the AWS ruleset,
 Checkov and ShellCheck. GitHub Actions runs the same on every push and PR
 ([`.github/workflows/terraform.yml`](.github/workflows/terraform.yml)). `terraform test` runs
 offline with a mocked AWS provider and mocked resource ARNs.
@@ -358,3 +371,25 @@ inputs (`0.0.0.0/0`, wide CIDRs, private-key material) are rejected.
 
 Checkov skips are inline with a reason next to each one, for example SG-reference rules that
 Checkov reads as open ingress, and attachments that happen in another module.
+
+## Advanced profile
+
+[`terraform/advanced/`](terraform/advanced/) is a separate root module, added in 2026, that takes
+the same segmentation idea further. The 2025 build had none of it, and it **has not been deployed**.
+
+![SecureVPC advanced architecture](docs/architecture-advanced.png)
+
+- **Five tiers in 2 AZs:** firewall, public (ALB, optional NAT), app, endpoints, and data (no route
+  out of the VPC).
+- **No SSH at all:** SSM Session Manager over interface endpoints, KMS-encrypted and logged.
+- **AWS Network Firewall** with IGW edge routing and symmetric same-AZ routes. Strict order,
+  AWS-managed threat groups, default drop. Egress is off unless you allowlist domains.
+- **AWS WAF on an ALB** (managed rule groups + rate limit) in front of a private Auto Scaling group.
+- **Route 53 Resolver DNS Firewall:** threat lists blocked, walled garden, fail closed, queries logged.
+- **VPC endpoints with endpoint policies** for SSM, Logs, KMS and S3.
+- **Detection:** flow logs v5 → S3 Parquet → Athena, plus five CloudWatch alarms → SNS.
+- **Validation:** 15 offline `terraform test` runs, `make adv-verify`, and Reachability Analyzer
+  paths (`make reachability`).
+
+It costs roughly USD 23/day with the defaults, mainly Network Firewall. Full details, deployment,
+cost table and teardown are in [`docs/advanced.md`](docs/advanced.md).

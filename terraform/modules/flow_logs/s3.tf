@@ -2,6 +2,10 @@ resource "aws_s3_bucket" "archive" {
   #checkov:skip=CKV_AWS_144:Cross-region replication doubles storage cost and is out of scope for a single-region lab.
   #checkov:skip=CKV_AWS_18:Server access logging would need a second bucket; flow log delivery is already authenticated AWS service traffic.
   #checkov:skip=CKV2_AWS_62:No downstream consumer for S3 event notifications in this project.
+  #checkov:skip=CKV2_AWS_6:False positive when count = 1: the public access block, versioning, lifecycle and SSE-KMS resources below all target this bucket (asserted in tests).
+  #checkov:skip=CKV_AWS_21:See CKV2_AWS_6 (aws_s3_bucket_versioning.archive).
+  #checkov:skip=CKV2_AWS_61:See CKV2_AWS_6 (aws_s3_bucket_lifecycle_configuration.archive).
+  #checkov:skip=CKV_AWS_145:See CKV2_AWS_6 (aws_s3_bucket_server_side_encryption_configuration.archive).
   count = var.enable_s3_archive ? 1 : 0
 
   bucket_prefix = "${var.name}-flow-logs-"
@@ -127,11 +131,12 @@ resource "aws_flow_log" "s3" {
   log_destination_type     = "s3"
   log_destination          = aws_s3_bucket.archive[0].arn
   max_aggregation_interval = var.max_aggregation_interval
+  log_format               = var.s3_log_format
 
   destination_options {
     file_format                = "parquet"
     per_hour_partition         = true
-    hive_compatible_partitions = false
+    hive_compatible_partitions = var.s3_hive_compatible_partitions
   }
 
   tags = { Name = "${var.name}-flow-log-s3" }

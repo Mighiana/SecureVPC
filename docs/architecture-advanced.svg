@@ -1,0 +1,175 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 1080" width="1280" height="1080" role="img" aria-labelledby="title desc">
+  <title id="title">SecureVPC advanced profile architecture</title>
+  <desc id="desc">Two-AZ VPC with firewall, public, app, endpoint and data tiers. Inbound traffic passes the Internet Gateway, AWS Network Firewall, an ALB with AWS WAF, then private app instances. App instances reach AWS APIs through VPC endpoints and only allowlisted domains through NAT and the firewall. DNS goes through Route 53 Resolver DNS Firewall. Flow, firewall, WAF, DNS and session logs feed CloudWatch alarms, SNS, S3 and Athena.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#111"/>
+    </marker>
+    <marker id="arrow-grey" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#666"/>
+    </marker>
+    <style>
+      .t  { font-family: "Helvetica Neue", Helvetica, Arial, "Liberation Sans", sans-serif; fill: #111; }
+      .m  { font-family: Menlo, Consolas, "DejaVu Sans Mono", "Liberation Mono", monospace; fill: #111; }
+      .mg { font-family: Menlo, Consolas, "DejaVu Sans Mono", "Liberation Mono", monospace; fill: #555; }
+      .h1 { font-size: 26px; font-weight: 700; }
+      .h2 { font-size: 14px; font-weight: 700; letter-spacing: .5px; }
+      .h3 { font-size: 15px; font-weight: 700; }
+      .s  { font-size: 12.5px; }
+      .xs { font-size: 11px; }
+      .box   { fill: #fff; stroke: #111; stroke-width: 2; }
+      .frame { fill: none; stroke: #111; stroke-width: 1.5; }
+      .tier  { fill: #f4f4f4; stroke: #111; stroke-width: 1.5; }
+      .tierp { fill: #e8e8e8; stroke: #111; stroke-width: 1.5; }
+      .dash  { fill: #fff; stroke: #111; stroke-width: 2; stroke-dasharray: 6 4; }
+      .in    { stroke: #111; stroke-width: 2.5; fill: none; }
+      .out   { stroke: #111; stroke-width: 2.5; fill: none; stroke-dasharray: 9 6; }
+      .log   { stroke: #666; stroke-width: 2; fill: none; stroke-dasharray: 2 5; stroke-linecap: round; }
+      .badge { fill: #111; }
+      .bt    { font-family: Menlo, Consolas, "DejaVu Sans Mono", "Liberation Mono", monospace; font-size: 10.5px; fill: #fff; font-weight: 700; }
+      .num   { fill: #111; }
+      .numt  { font-family: Helvetica, Arial, "Liberation Sans", sans-serif; font-size: 12px; font-weight: 700; fill: #fff; }
+    </style>
+  </defs>
+  <rect width="1280" height="1080" fill="#fff"/>
+  <text class="t h1" x="40" y="46">SecureVPC · advanced profile</text>
+  <text class="mg s" x="500" y="45">2026 extension · not part of the 2025 console build · not deployed</text>
+  <rect class="box" x="330" y="66" width="300" height="58" rx="4"/>
+  <text class="t h3" x="342" y="88">Internet clients</text>
+  <text class="m xs" x="342" y="106">alb_ingress_cidrs · 80/443</text>
+  <rect class="box" x="330" y="146" width="300" height="52" rx="4"/>
+  <text class="t h3" x="342" y="168">Internet Gateway</text>
+  <text class="m xs" x="342" y="186">edge route table → firewall</text>
+  <path class="in" d="M480,124 L480,144" marker-end="url(#arrow)"/>
+  <rect class="frame" x="30" y="214" width="830" height="836" rx="6"/>
+  <text class="t h2" x="44" y="236">VPC 10.0.0.0/16</text>
+  <text class="mg xs" x="190" y="236">default SG locked · NACL per tier · Flow Logs v5 (ALL)</text>
+  <text class="t h2" x="160" y="262">AZ a</text><text class="t h2" x="760" y="262">AZ b</text>
+  <rect class="tierp" x="44" y="272" width="802" height="96" rx="4"/>
+  <text class="t h3" x="56" y="296">firewall</text>
+  <text class="mg xs" x="56" y="314">/28 ×2</text>
+  <rect class="tier" x="44" y="386" width="802" height="132" rx="4"/>
+  <text class="t h3" x="56" y="410">public</text>
+  <text class="mg xs" x="56" y="428">/24 ×2</text>
+  <rect class="tier" x="44" y="536" width="802" height="120" rx="4"/>
+  <text class="t h3" x="56" y="560">app</text>
+  <text class="mg xs" x="56" y="578">/24 ×2</text>
+  <rect class="tier" x="44" y="674" width="802" height="112" rx="4"/>
+  <text class="t h3" x="56" y="698">endpoints</text>
+  <text class="mg xs" x="56" y="716">/24 ×2</text>
+  <rect class="tierp" x="44" y="804" width="802" height="96" rx="4"/>
+  <text class="t h3" x="56" y="828">data</text>
+  <text class="mg xs" x="56" y="846">/24 ×2</text>
+  <rect class="box" x="160" y="284" width="320" height="72" rx="4"/>
+  <text class="t h3" x="172" y="306">Network Firewall endpoint</text>
+  <text class="m xs" x="172" y="324">10.0.0.0/28 · strict order · drop default</text>
+  <text class="m xs" x="172" y="339">managed threat groups → domain allowlist</text>
+  <rect class="box" x="160" y="398" width="150" height="108" rx="4"/>
+  <text class="t h3" x="172" y="420">ALB node</text>
+  <text class="m xs" x="172" y="438">10.0.1.0/24</text>
+  <text class="m xs" x="172" y="453">WAF web ACL</text>
+  <text class="m xs" x="172" y="468">no instances here</text>
+  <rect class="dash" x="330" y="398" width="150" height="108" rx="4"/>
+  <text class="t h3" x="342" y="420">NAT Gateway</text>
+  <text class="m xs" x="342" y="438">only if egress</text>
+  <text class="m xs" x="342" y="453">domains are set</text>
+  <text class="m xs" x="342" y="468">(off by default)</text>
+  <rect class="box" x="160" y="548" width="320" height="96" rx="4"/>
+  <text class="t h3" x="172" y="570">Web instance (ASG)</text>
+  <text class="m xs" x="172" y="588">10.0.11.0/24 · no public IP · no SSH</text>
+  <text class="m xs" x="172" y="603">IMDSv2 · encrypted gp3 · SSM agent</text>
+  <text class="m xs" x="172" y="618">in: 80 from ALB SG only</text>
+  <rect class="box" x="160" y="686" width="320" height="88" rx="4"/>
+  <text class="t h3" x="172" y="708">Interface endpoints</text>
+  <text class="m xs" x="172" y="726">10.0.21.0/24 · ssm ssmmessages ec2messages</text>
+  <text class="m xs" x="172" y="741">logs kms · in: 443 from app SG</text>
+  <text class="m xs" x="172" y="756">policy: this account's principals only</text>
+  <rect class="box" x="160" y="816" width="320" height="72" rx="4"/>
+  <text class="t h3" x="172" y="838">Data tier (reserved)</text>
+  <text class="m xs" x="172" y="856">10.0.31.0/24 · no route out of the VPC</text>
+  <text class="m xs" x="172" y="871">in: data_port from app SG only</text>
+  <rect class="box" x="510" y="284" width="320" height="72" rx="4"/>
+  <text class="t h3" x="522" y="306">Network Firewall endpoint</text>
+  <text class="m xs" x="522" y="324">10.0.0.16/28 · strict order · drop default</text>
+  <text class="m xs" x="522" y="339">managed threat groups → domain allowlist</text>
+  <rect class="box" x="510" y="398" width="150" height="108" rx="4"/>
+  <text class="t h3" x="522" y="420">ALB node</text>
+  <text class="m xs" x="522" y="438">10.0.2.0/24</text>
+  <text class="m xs" x="522" y="453">WAF web ACL</text>
+  <text class="m xs" x="522" y="468">no instances here</text>
+  <rect class="box" x="510" y="548" width="320" height="96" rx="4"/>
+  <text class="t h3" x="522" y="570">Web instance (ASG)</text>
+  <text class="m xs" x="522" y="588">10.0.12.0/24 · no public IP · no SSH</text>
+  <text class="m xs" x="522" y="603">IMDSv2 · encrypted gp3 · SSM agent</text>
+  <text class="m xs" x="522" y="618">in: 80 from ALB SG only</text>
+  <rect class="box" x="510" y="686" width="320" height="88" rx="4"/>
+  <text class="t h3" x="522" y="708">Interface endpoints</text>
+  <text class="m xs" x="522" y="726">10.0.22.0/24 · ssm ssmmessages ec2messages</text>
+  <text class="m xs" x="522" y="741">logs kms · in: 443 from app SG</text>
+  <text class="m xs" x="522" y="756">policy: this account's principals only</text>
+  <rect class="box" x="510" y="816" width="320" height="72" rx="4"/>
+  <text class="t h3" x="522" y="838">Data tier (reserved)</text>
+  <text class="m xs" x="522" y="856">10.0.32.0/24 · no route out of the VPC</text>
+  <text class="m xs" x="522" y="871">in: data_port from app SG only</text>
+  <path class="in" d="M420,198 L420,250 L320,250 L320,282" marker-end="url(#arrow)"/>
+  <path class="in" d="M540,198 L540,250 L670,250 L670,282" marker-end="url(#arrow)"/>
+  <path class="in" d="M235,356 L235,396" marker-end="url(#arrow)"/>
+  <path class="in" d="M235,506 L235,546" marker-end="url(#arrow)"/>
+  <path class="in" d="M585,356 L585,396" marker-end="url(#arrow)"/>
+  <path class="in" d="M585,506 L585,546" marker-end="url(#arrow)"/>
+  <path class="in" d="M320,644 L320,684" marker-end="url(#arrow)"/>
+  <path class="in" d="M670,644 L670,684" marker-end="url(#arrow)"/>
+  <path class="out" d="M400,548 L400,508" marker-end="url(#arrow)"/>
+  <path class="out" d="M440,398 L440,358" marker-end="url(#arrow)"/>
+  <rect class="box" x="44" y="914" width="394" height="122" rx="4"/>
+  <text class="t h3" x="56" y="936">S3 gateway endpoint</text>
+  <text class="m xs" x="56" y="954">app + data route tables</text>
+  <text class="m xs" x="56" y="969">policy: own-account buckets</text>
+  <text class="m xs" x="56" y="984">+ read-only AL2023 / SSM buckets</text>
+  <text class="m xs" x="56" y="999">app SG egress: S3 prefix list only</text>
+  <rect class="box" x="452" y="914" width="394" height="122" rx="4"/>
+  <text class="t h3" x="464" y="936">Route 53 Resolver DNS Firewall</text>
+  <text class="m xs" x="464" y="954">1 BLOCK  AWS managed threat lists</text>
+  <text class="m xs" x="464" y="969">2 ALLOW  amazonaws.com, ec2/compute.internal, allowlist</text>
+  <text class="m xs" x="464" y="984">3 BLOCK  everything else (walled garden)</text>
+  <text class="m xs" x="464" y="999">fail closed · every query logged</text>
+  <text class="t h2" x="890" y="236">Management · detection</text>
+  <rect class="box" x="890" y="252" width="360" height="90" rx="4"/>
+  <text class="t h3" x="902" y="274">SSM Session Manager</text>
+  <text class="m xs" x="902" y="292">no bastion · no port 22 · no key pair</text>
+  <text class="m xs" x="902" y="307">KMS-encrypted, transcript → CloudWatch</text>
+  <text class="m xs" x="902" y="322">operator IAM policy: tag-scoped</text>
+  <rect class="box" x="890" y="358" width="360" height="106" rx="4"/>
+  <text class="t h3" x="902" y="380">CloudWatch Logs (KMS)</text>
+  <text class="m xs" x="902" y="398">VPC flow · firewall alert + flow</text>
+  <text class="m xs" x="902" y="413">WAF · DNS queries · SSM sessions</text>
+  <text class="m xs" x="902" y="428">metric filters: REJECT, firewall drop,</text>
+  <text class="m xs" x="902" y="443">DNS block</text>
+  <rect class="box" x="890" y="480" width="360" height="90" rx="4"/>
+  <text class="t h3" x="902" y="502">CloudWatch alarms → SNS</text>
+  <text class="m xs" x="902" y="520">rejected flows · firewall blocked</text>
+  <text class="m xs" x="902" y="535">DNS blocked · WAF blocked</text>
+  <text class="m xs" x="902" y="550">unhealthy targets · email (KMS topic)</text>
+  <rect class="box" x="890" y="586" width="360" height="90" rx="4"/>
+  <text class="t h3" x="902" y="608">S3 archive → Athena</text>
+  <text class="m xs" x="902" y="626">flow logs v5, Parquet, Hive partitions</text>
+  <text class="m xs" x="902" y="641">partition projection · named queries</text>
+  <text class="m xs" x="902" y="656">workgroup scan cap · SSE-KMS</text>
+  <rect class="box" x="890" y="692" width="360" height="74" rx="4"/>
+  <text class="t h3" x="902" y="714">ALB access logs → S3</text>
+  <text class="m xs" x="902" y="732">TLS-only bucket · lifecycle expiry</text>
+  <rect class="box" x="890" y="782" width="360" height="90" rx="4"/>
+  <text class="t h3" x="902" y="804">Reachability Analyzer</text>
+  <text class="m xs" x="902" y="822">scripts/reachability.sh:</text>
+  <text class="m xs" x="902" y="837">IGW → app :22 / :5432  expect no path</text>
+  <text class="m xs" x="902" y="852">app → SSM endpoint :443  expect path</text>
+  <path class="log" d="M846,600 L888,520" marker-end="url(#arrow-grey)"/>
+  <path class="log" d="M846,340 L888,420" marker-end="url(#arrow-grey)"/>
+  <path class="log" d="M1070,464 L1070,478" marker-end="url(#arrow-grey)"/>
+  <text class="t h2" x="890" y="900">Legend</text>
+  <path class="in" d="M890,922 L950,922" marker-end="url(#arrow)"/><text class="t s" x="962" y="926">inbound request path</text>
+  <path class="out" d="M890,946 L950,946" marker-end="url(#arrow)"/><text class="t s" x="962" y="950">egress (allowlisted domains only)</text>
+  <path class="log" d="M890,970 L950,970" marker-end="url(#arrow-grey)"/><text class="t s" x="962" y="974">log / metric delivery</text>
+  <text class="mg xs" x="890" y="1002">dashed box = created only when enabled</text>
+  <text class="mg xs" x="890" y="1020">Return egress: NAT → firewall → IGW</text>
+</svg>

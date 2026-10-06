@@ -11,14 +11,19 @@ step() { printf '\n==> %s\n' "$*"; }
 step "terraform fmt -check"
 terraform -chdir="$TF_DIR" fmt -recursive -check -diff
 
-step "terraform init (no backend)"
-terraform -chdir="$TF_DIR" init -backend=false -input=false >/dev/null
+# Two root modules: the faithful reconstruction and the advanced profile.
+for root in "$TF_DIR" "$TF_DIR/advanced"; do
+  rel="${root#"$ROOT"/}"
 
-step "terraform validate"
-terraform -chdir="$TF_DIR" validate
+  step "terraform init (no backend): $rel"
+  terraform -chdir="$root" init -backend=false -input=false >/dev/null
 
-step "terraform test (mock provider, offline)"
-terraform -chdir="$TF_DIR" test
+  step "terraform validate: $rel"
+  terraform -chdir="$root" validate
+
+  step "terraform test (mock provider, offline): $rel"
+  terraform -chdir="$root" test
+done
 
 if command -v tflint >/dev/null 2>&1; then
   step "tflint"

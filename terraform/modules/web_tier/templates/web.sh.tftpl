@@ -1,0 +1,13 @@
+#!/bin/bash
+# App-tier bootstrap. There is no SSH in this profile (admin access is SSM
+# Session Manager), and the only package source is S3 via the gateway endpoint.
+set -euo pipefail
+
+systemctl disable --now sshd || true
+
+dnf -y install httpd
+
+echo "<h1>Secure Web Server</h1>" > /var/www/html/index.html
+echo "<!-- ${name} -->" >> /var/www/html/index.html
+
+systemctl enable --now httpd
