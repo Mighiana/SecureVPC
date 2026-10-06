@@ -57,3 +57,15 @@ variable "partition" {
   description = "AWS partition (aws, aws-cn, aws-us-gov)."
   type        = string
 }
+
+variable "s3_log_format" {
+  description = "Custom record format for the S3 flow log (null = AWS default v2 fields)."
+  type        = string
+  default     = null
+}
+
+variable "s3_hive_compatible_partitions" {
+  description = "Write S3 flow logs with Hive-style key=value prefixes (for Athena partition projection)."
+  type        = bool
+  default     = false
+}

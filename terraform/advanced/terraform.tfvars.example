@@ -1,0 +1,28 @@
+# Copy to terraform.tfvars (git-ignored) and edit.
+# WARNING: this profile costs roughly USD 20-25/day while running with the
+# defaults (Network Firewall is ~USD 0.395/hour per AZ). See the README cost
+# table and run `make adv-destroy` when you are done.
+
+aws_region  = "us-east-1"
+environment = "adv"
+
+# Reach the demo only from your own IP (curl -s https://checkip.amazonaws.com).
+# alb_ingress_cidrs = ["203.0.113.10/32"]
+
+# Internet egress is OFF by default (AWS APIs + OS packages use VPC endpoints).
+# Allowlist domains to create a NAT Gateway and let Network Firewall pass them:
+# egress_allowed_domains = ["github.com", "pypi.org", "files.pythonhosted.org"]
+
+# Region-specific AWS Managed Domain List IDs for DNS Firewall:
+#   aws route53resolver list-firewall-domain-lists \
+#     --query "FirewallDomainLists[?ManagedOwnerName=='Route 53 Resolver DNS Firewall'].[Name,Id]" --output table
+# dns_firewall_managed_domain_list_ids = ["rslvr-fdl-xxxxxxxxxxxxxxxx", "rslvr-fdl-yyyyyyyyyyyyyyyy"]
+
+# alert_email        = "you@example.com"
+# budget_alert_email = "you@example.com"
+# monthly_budget_usd = 800
+
+# Cost levers:
+# enable_network_firewall = false   # biggest saving
+# az_count                = 2
+# asg_desired_capacity    = 2
