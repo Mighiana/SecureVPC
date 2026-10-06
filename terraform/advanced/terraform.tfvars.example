@@ -9,8 +9,13 @@ environment = "adv"
 # Reach the demo only from your own IP (curl -s https://checkip.amazonaws.com).
 # alb_ingress_cidrs = ["203.0.113.10/32"]
 
+# HTTPS: an ACM certificate plus the hostname it covers (CNAME/alias it to the ALB).
+# certificate_arn = "arn:aws:acm:us-east-1:111122223333:certificate/..."
+# web_hostname    = "demo.example.com"
+
 # Internet egress is OFF by default (AWS APIs + OS packages use VPC endpoints).
-# Allowlist domains to create a NAT Gateway and let Network Firewall pass them:
+# Allowlist domains to create a NAT Gateway and let Network Firewall pass them
+# (requires enable_network_firewall = true, which enforces the allowlist):
 # egress_allowed_domains = ["github.com", "pypi.org", "files.pythonhosted.org"]
 
 # Region-specific AWS Managed Domain List IDs for DNS Firewall:
@@ -23,6 +28,6 @@ environment = "adv"
 # monthly_budget_usd = 800
 
 # Cost levers:
-# enable_network_firewall = false   # biggest saving
+# enable_network_firewall = false   # biggest saving (only with no egress_allowed_domains)
 # az_count                = 2
 # asg_desired_capacity    = 2

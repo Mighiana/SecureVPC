@@ -159,6 +159,7 @@ module "web" {
   asg_desired_capacity     = var.asg_desired_capacity
   asg_max_size             = var.asg_max_size
   certificate_arn          = var.certificate_arn
+  web_hostname             = var.web_hostname
   waf_rate_limit           = var.waf_rate_limit
   waf_log_group_name       = local.log_groups.waf
   session_log_group_name   = local.log_groups.ssm_sessions
