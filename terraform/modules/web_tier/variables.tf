@@ -78,6 +78,12 @@ variable "certificate_arn" {
   type        = string
 }
 
+variable "web_hostname" {
+  description = "Hostname covered by certificate_arn and mapped (CNAME/alias) to the ALB; used for web_url when HTTPS is on."
+  type        = string
+  default     = null
+}
+
 variable "waf_rate_limit" {
   description = "Requests per 5 minutes per client IP before WAF blocks it."
   type        = number

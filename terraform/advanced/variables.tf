@@ -98,6 +98,11 @@ variable "egress_allowed_domains" {
     condition     = alltrue([for d in var.egress_allowed_domains : can(regex("^\\.?([a-z0-9-]+\\.)+[a-z]{2,}\\.?$", lower(d)))])
     error_message = "egress_allowed_domains entries must be plain domain names (no wildcards, schemes or paths)."
   }
+
+  validation {
+    condition     = length(var.egress_allowed_domains) == 0 || var.enable_network_firewall
+    error_message = "egress_allowed_domains needs enable_network_firewall = true; without the firewall nothing enforces the allowlist."
+  }
 }
 
 variable "enable_network_firewall" {
@@ -182,6 +187,22 @@ variable "certificate_arn" {
   validation {
     condition     = var.certificate_arn == null || can(regex("^arn:aws[a-z-]*:acm:", var.certificate_arn))
     error_message = "certificate_arn must be an ACM certificate ARN."
+  }
+}
+
+variable "web_hostname" {
+  description = "Hostname covered by certificate_arn (e.g. demo.example.com). Point it at the ALB with a CNAME/alias; web_url then uses it."
+  type        = string
+  default     = null
+
+  validation {
+    condition     = var.web_hostname == null || can(regex("^([a-z0-9-]+\\.)+[a-z]{2,}$", var.web_hostname))
+    error_message = "web_hostname must be a plain DNS name such as demo.example.com."
+  }
+
+  validation {
+    condition     = var.certificate_arn == null || var.web_hostname != null
+    error_message = "Set web_hostname when certificate_arn is set; the certificate cannot cover the ALB's generated DNS name."
   }
 }
 

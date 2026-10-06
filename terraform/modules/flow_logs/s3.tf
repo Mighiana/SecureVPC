@@ -100,7 +100,7 @@ resource "aws_s3_bucket_policy" "archive" {
         Effect    = "Allow"
         Principal = { Service = "delivery.logs.amazonaws.com" }
         Action    = "s3:PutObject"
-        Resource  = "${aws_s3_bucket.archive[0].arn}/AWSLogs/${var.account_id}/*"
+        Resource  = "${aws_s3_bucket.archive[0].arn}/AWSLogs/${var.s3_hive_compatible_partitions ? "aws-account-id=" : ""}${var.account_id}/*"
         Condition = {
           StringEquals = { "aws:SourceAccount" = var.account_id }
           ArnLike      = { "aws:SourceArn" = "arn:${var.partition}:logs:${var.region}:${var.account_id}:*" }

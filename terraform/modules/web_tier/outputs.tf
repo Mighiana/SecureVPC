@@ -15,7 +15,7 @@ output "target_group_arn_suffix" {
 
 output "web_url" {
   description = "URL of the web tier."
-  value       = var.certificate_arn == null ? "http://${aws_lb.this.dns_name}" : "https://${aws_lb.this.dns_name}"
+  value       = var.certificate_arn == null ? "http://${aws_lb.this.dns_name}" : "https://${coalesce(var.web_hostname, aws_lb.this.dns_name)}"
 }
 
 output "asg_name" {

@@ -244,6 +244,27 @@ run "cheap_mode_without_firewalls" {
   }
 }
 
+run "rejects_egress_allowlist_without_firewall" {
+  command = plan
+
+  variables {
+    enable_network_firewall = false
+    egress_allowed_domains  = ["github.com"]
+  }
+
+  expect_failures = [var.egress_allowed_domains]
+}
+
+run "rejects_certificate_without_hostname" {
+  command = plan
+
+  variables {
+    certificate_arn = "arn:aws:acm:us-east-1:123456789012:certificate/00000000-0000-0000-0000-000000000000"
+  }
+
+  expect_failures = [var.web_hostname]
+}
+
 run "rejects_wildcard_or_url_egress" {
   command = plan
 
@@ -614,6 +635,7 @@ run "web_tier_private_hardened_and_waf_protected" {
     asg_desired_capacity     = 2
     asg_max_size             = 4
     certificate_arn          = "arn:aws:acm:us-east-1:123456789012:certificate/00000000-0000-0000-0000-000000000000"
+    web_hostname             = "demo.example.com"
     waf_rate_limit           = 1000
     waf_log_group_name       = "aws-waf-logs-t"
     session_log_group_name   = "/t/ssm/sessions"
@@ -622,6 +644,11 @@ run "web_tier_private_hardened_and_waf_protected" {
     alb_logs_expiration_days = 90
     force_destroy            = true
     deletion_protection      = false
+  }
+
+  assert {
+    condition     = output.web_url == "https://demo.example.com"
+    error_message = "With a certificate, web_url must use the certificate's hostname, not the ALB's generated name."
   }
 
   assert {

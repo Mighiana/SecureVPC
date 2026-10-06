@@ -3,7 +3,7 @@
 > **Provenance.** This profile is new design work from October 2026. It was **not** part of the
 > 2025 console build. The faithful reconstruction of that build is still in [`terraform/`](../terraform/).
 > This profile lives in [`terraform/advanced/`](../terraform/advanced/).
-> **It has not been deployed to AWS.** It passes `fmt`, `validate`, 15 offline `terraform test`
+> **It has not been deployed to AWS.** It passes `fmt`, `validate`, 17 offline `terraform test`
 > runs against a mocked provider, TFLint and Checkov. Nothing here has been run against real AWS.
 
 ![SecureVPC advanced architecture](architecture-advanced.png)
@@ -57,7 +57,9 @@ there to show the isolation pattern.
   the Log4j / CVE-2021-44228 signatures), `LinuxRuleSet`, and a per-IP rate limit (`waf_rate_limit`).
   WAF logs go to CloudWatch with the `authorization` and `cookie` headers redacted.
 - ALB: `drop_invalid_header_fields`, access logs to a private TLS-only bucket, and TLS 1.3 policy
-  `ELBSecurityPolicy-TLS13-1-2-2021-06` with HTTP → HTTPS redirect when you set `certificate_arn`.
+  `ELBSecurityPolicy-TLS13-1-2-2021-06` with HTTP → HTTPS redirect when you set `certificate_arn`
+  plus `web_hostname` (a name the certificate covers; point it at the ALB with a CNAME/alias).
+  Without a certificate the lab serves plain HTTP, so narrow `alb_ingress_cidrs` for demos.
 
 **Network**
 - Network Firewall policy: stateless traffic is forwarded to the stateful engine. Strict rule
@@ -162,7 +164,7 @@ planning, not measured bills; check <https://aws.amazon.com/pricing/> for your r
 | WAF (web ACL + rules + requests), KMS keys, CloudWatch Logs, S3, Athena | monthly / usage-based |
 
 With the defaults that is roughly **USD 0.95/hour, about USD 23/day**, before usage charges.
-`enable_network_firewall = false` removes the largest item (about USD 0.15/hour remains).
+`enable_network_firewall = false` removes the largest item (about USD 0.15/hour remains); it requires an empty `egress_allowed_domains`, because without the firewall nothing would enforce the allowlist.
 
 Guardrails: `budget_alert_email` + `monthly_budget_usd`, short log retention, S3 lifecycle
 expiry, Athena scan cap, `firewall_delete_protection = false` and `s3_force_destroy = true` by

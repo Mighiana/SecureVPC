@@ -335,3 +335,65 @@ run "flow_logs_with_s3_archive" {
     error_message = "Second flow log must deliver to S3 when the archive is enabled."
   }
 }
+
+run "flow_log_archive_policy_matches_default_prefix" {
+  command = apply
+
+  module {
+    source = "./modules/flow_logs"
+  }
+
+  variables {
+    name                     = "t"
+    vpc_id                   = "vpc-12345678"
+    traffic_type             = "ALL"
+    retention_in_days        = 14
+    max_aggregation_interval = 60
+    enable_kms               = true
+    enable_s3_archive        = true
+    s3_expiration_days       = 30
+    s3_force_destroy         = true
+    account_id               = "123456789012"
+    region                   = "us-east-1"
+    partition                = "aws"
+  }
+
+  assert {
+    condition     = strcontains(aws_s3_bucket_policy.archive[0].policy, "/AWSLogs/123456789012/*")
+    error_message = "Default flow-log delivery writes to AWSLogs/<account>/; the bucket policy must allow that prefix."
+  }
+}
+
+run "flow_log_archive_policy_matches_hive_prefix" {
+  command = apply
+
+  module {
+    source = "./modules/flow_logs"
+  }
+
+  variables {
+    name                          = "t"
+    vpc_id                        = "vpc-12345678"
+    traffic_type                  = "ALL"
+    retention_in_days             = 14
+    max_aggregation_interval      = 60
+    enable_kms                    = true
+    enable_s3_archive             = true
+    s3_expiration_days            = 30
+    s3_force_destroy              = true
+    account_id                    = "123456789012"
+    region                        = "us-east-1"
+    partition                     = "aws"
+    s3_hive_compatible_partitions = true
+  }
+
+  assert {
+    condition     = aws_flow_log.s3[0].destination_options[0].hive_compatible_partitions
+    error_message = "Hive-compatible partitions must be passed to the S3 flow log."
+  }
+
+  assert {
+    condition     = strcontains(aws_s3_bucket_policy.archive[0].policy, "/AWSLogs/aws-account-id=123456789012/*")
+    error_message = "Hive-partitioned delivery writes to AWSLogs/aws-account-id=<account>/; the bucket policy must allow that prefix."
+  }
+}

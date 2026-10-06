@@ -41,7 +41,7 @@ done
 if [[ "$FIREWALL" != "null" ]]; then
   for id in $(json subnet_ids | jq -r '.public[]'); do
     t=$(aws ec2 describe-route-tables --filters "Name=association.subnet-id,Values=$id" \
-      --query "RouteTables[0].Routes[?DestinationCidrBlock=='0.0.0.0/0'].GatewayId | [0]" --output text)
+      --query "RouteTables[0].Routes[?DestinationCidrBlock=='0.0.0.0/0'] | [0].[GatewayId, VpcEndpointId] | [?@ != null] | [0]" --output text)
     [[ "$t" == vpce-* ]] && ok "public subnet $id 0.0.0.0/0 -> firewall endpoint $t" || bad "public subnet $id default route is '$t' (expected vpce-*)"
   done
   name=$(jq -r .name <<<"$FIREWALL")
@@ -76,7 +76,8 @@ section "Logging"
 FL=$(aws ec2 describe-flow-logs --filter "Name=resource-id,Values=$VPC_ID" \
   --query 'FlowLogs[].{Dest:LogDestinationType,Status:DeliverLogsStatus}' --output text)
 echo "$FL" | mask | sed 's/^/    /'
-[[ "$FL" != *FAILED* ]] && ok "flow log delivery has no failures" || bad "a flow log is failing to deliver"
+if [[ -z "$FL" ]]; then bad "no flow logs found for $VPC_ID"
+else [[ "$FL" != *FAILED* ]] && ok "flow log delivery has no failures" || bad "a flow log is failing to deliver"; fi
 for lg in $(json log_groups | jq -r '.[] | select(. != null)'); do
   n=$(aws logs describe-log-streams --log-group-name "$lg" --max-items 1 --query 'length(logStreams)' --output text 2>/dev/null || echo 0)
   [[ "$n" != "0" ]] && ok "log streams present in $lg" || bad "no log streams yet in $lg (traffic-dependent)"
