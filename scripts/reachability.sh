@@ -29,7 +29,7 @@ if [[ "$INSTANCE" == "None" || -z "$INSTANCE" ]]; then
 fi
 
 PATHS=()
-# shellcheck disable=SC2329  # invoked by the EXIT trap
+# shellcheck disable=SC2317,SC2329  # invoked by the EXIT trap (code differs by ShellCheck version)
 cleanup() {
   for p in "${PATHS[@]}"; do
     "${AWS[@]}" ec2 delete-network-insights-path --network-insights-path-id "$p" >/dev/null 2>&1 || true
