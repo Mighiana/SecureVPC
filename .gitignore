@@ -33,3 +33,6 @@ id_*
 .idea/
 .vscode/
 __pycache__/
+
+# LocalStack demo working copy
+.localstack/

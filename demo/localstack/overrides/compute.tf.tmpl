@@ -1,0 +1,11 @@
+# LocalStack does not echo metadata_options or vpc_security_group_ids back; ignore that drift in the demo only.
+resource "aws_instance" "bastion" {
+  lifecycle {
+    ignore_changes = [metadata_options, vpc_security_group_ids]
+  }
+}
+resource "aws_instance" "web" {
+  lifecycle {
+    ignore_changes = [metadata_options, vpc_security_group_ids]
+  }
+}

@@ -2,7 +2,7 @@ TF_DIR := terraform
 TF     := terraform -chdir=$(TF_DIR)
 ADV    := terraform -chdir=$(TF_DIR)/advanced
 
-.PHONY: help bootstrap init fmt check test plan apply output verify destroy cost-check \
+.PHONY: help bootstrap init fmt check test plan apply output verify destroy cost-check demo \
         adv-init adv-test adv-plan adv-apply adv-output adv-verify adv-destroy reachability
 
 help: ## List targets
@@ -40,6 +40,9 @@ destroy: ## Tear everything down
 
 cost-check: ## Confirm no billable SecureVPC resources remain (REGION=us-east-1)
 	./scripts/cost-check.sh $(or $(REGION),us-east-1)
+
+demo: ## Free local demo: apply + verify + destroy the baseline on LocalStack (Docker, no AWS account)
+	./scripts/localstack-demo.sh
 
 # --- Advanced profile (2026 extension; expensive while running, see README) ---
 

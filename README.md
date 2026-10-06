@@ -37,6 +37,7 @@ deployed resources are the 2025 console ones.
 - [Repository layout](#repository-layout)
 - [Deployment](#deployment)
 - [Validating a deployment](#validating-a-deployment)
+- [Free local demo (LocalStack)](#free-local-demo-localstack)
 - [Teardown](#teardown)
 - [Cost awareness](#cost-awareness)
 - [Technical decisions](#technical-decisions)
@@ -187,10 +188,12 @@ All of these are in code and checked by the tests in
 │   ├── bootstrap.sh    # pinned, checksum-verified dev tools
 │   ├── check.sh        # fmt, validate, test, tflint, checkov, shellcheck
 │   ├── verify.sh       # read-only checks of a live deployment
+│   ├── localstack-demo.sh  # free apply/verify/destroy demo on LocalStack
 │   ├── cost-check.sh   # confirm nothing billable is left after destroy
 │   ├── verify-advanced.sh  # read-only checks of a live advanced deployment
 │   └── reachability.sh     # Reachability Analyzer paths for the advanced profile
 ├── docs/architecture.svg / .png, architecture-advanced.svg / .png, advanced.md
+├── demo/localstack/    # demo-only provider + emulator-quirk overrides
 ├── original-2025/      # unchanged notes + screenshots from the console build
 └── Makefile
 ```
@@ -250,6 +253,35 @@ so its output can go in a screenshot or README.
 Before sharing any screenshot, redact the account ID, public IPs, and anything from `aws sts
 get-caller-identity` or `aws configure`. Never paste credential files or `terraform.tfstate`. State
 contains resource IDs and the public key.
+
+## Free local demo (LocalStack)
+
+![make demo on LocalStack](docs/demo-localstack.gif)
+
+`make demo` runs the baseline profile against [LocalStack](https://github.com/localstack/localstack)
+3.8 Community, a free AWS emulator in Docker. You don't need an AWS account, and it costs nothing.
+It starts the container, applies the Terraform, re-plans to show there's no drift, runs
+`scripts/verify.sh` and destroys everything. It needs Docker, Terraform, the AWS CLI, `jq` and
+`ssh-keygen`. The demo runs on a copy in `.localstack/work/`, so it never touches `terraform/`
+state. `KEEP=1 make demo` leaves the stack running.
+
+**What it shows:** the Terraform applies end to end, and the emulated resources are wired as
+designed. The bastion is in the public subnet and the web server in the private one with no
+public IP. The default routes go to the IGW and the NAT Gateway, the SG rules chain web ← bastion,
+and the custom NACLs and the Flow Log (ALL → CloudWatch) exist.
+
+**What it doesn't show:** LocalStack doesn't boot real instances or carry packets. The SSH/HTTP
+checks and flow-log delivery can't happen, so `verify.sh` reports the two traffic checks as
+`SKIP`. This is not an AWS deployment, and the Terraform still hasn't been applied to AWS.
+
+The demo uses a handful of overrides, all in `demo/localstack/overrides/` and applied only to the
+copy:
+- Provider endpoints point at LocalStack.
+- The 3 saved Logs Insights queries are skipped, because LocalStack Community doesn't implement them.
+- Some attributes that LocalStack doesn't echo back are ignored.
+
+The advanced profile isn't part of the demo. LocalStack Community doesn't emulate services such
+as Network Firewall and WAF, so the advanced profile is covered by its offline tests instead.
 
 ## Teardown
 

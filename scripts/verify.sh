@@ -9,7 +9,10 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-TF_DIR="$ROOT/terraform"
+TF_DIR="${TF_DIR:-$ROOT/terraform}"
+# LOCALSTACK=1: emulator run (scripts/localstack-demo.sh). It creates no packet
+# traffic, so the traffic-dependent flow-log checks are reported as SKIP.
+LOCALSTACK="${LOCALSTACK:-0}"
 
 command -v aws >/dev/null || { echo "aws CLI is required" >&2; exit 1; }
 command -v jq  >/dev/null || { echo "jq is required" >&2; exit 1; }
@@ -26,9 +29,10 @@ WEB_ID="$(out web_instance_id)"
 LOG_GROUP="$(out flow_log_group_name)"
 export AWS_REGION="$REGION"
 
-PASS=0; FAIL=0
+PASS=0; FAIL=0; SKIP=0
 ok()   { printf '  [PASS] %s\n' "$*"; PASS=$((PASS+1)); }
 bad()  { printf '  [FAIL] %s\n' "$*"; FAIL=$((FAIL+1)); }
+skip() { printf '  [SKIP] %s\n' "$*"; SKIP=$((SKIP+1)); }
 section() { printf '\n## %s\n' "$*"; }
 
 section "VPC"
@@ -86,16 +90,24 @@ aws ec2 describe-flow-logs --filter "Name=resource-id,Values=$VPC_ID" \
 
 FL_STATUS=$(aws ec2 describe-flow-logs --filter "Name=resource-id,Values=$VPC_ID" "Name=log-destination-type,Values=cloud-watch-logs" \
   --query 'FlowLogs[0].DeliverLogsStatus' --output text)
-[[ "$FL_STATUS" == "SUCCESS" ]] && ok "flow logs delivering to CloudWatch" || bad "flow log delivery status: $FL_STATUS"
+if [[ "$LOCALSTACK" == "1" ]]; then
+  skip "flow log delivery (LocalStack has no real packet traffic to deliver)"
+else
+  [[ "$FL_STATUS" == "SUCCESS" ]] && ok "flow logs delivering to CloudWatch" || bad "flow log delivery status: $FL_STATUS"
+fi
 
 section "CloudWatch Logs"
 STREAMS=$(aws logs describe-log-streams --log-group-name "$LOG_GROUP" --query 'length(logStreams)' --output text)
-[[ "$STREAMS" -gt 0 ]] && ok "$STREAMS log stream(s) in $LOG_GROUP" || bad "no log streams yet in $LOG_GROUP (records appear a few minutes after traffic)"
+if [[ "$LOCALSTACK" == "1" ]]; then
+  skip "log streams in $LOG_GROUP (need real traffic)"
+else
+  [[ "$STREAMS" -gt 0 ]] && ok "$STREAMS log stream(s) in $LOG_GROUP" || bad "no log streams yet in $LOG_GROUP (records appear a few minutes after traffic)"
+fi
 
 echo "  Most recent REJECT records (last 30 min, max 10):"
 aws logs filter-log-events --log-group-name "$LOG_GROUP" \
   --start-time $(( ($(date +%s) - 1800) * 1000 )) --filter-pattern '"REJECT"' --max-items 10 \
   --query 'events[].message' --output text 2>/dev/null | tr '\t' '\n' | mask | sed 's/^/    /' || true
 
-printf '\nResult: %d passed, %d failed\n' "$PASS" "$FAIL"
+printf '\nResult: %d passed, %d failed, %d skipped\n' "$PASS" "$FAIL" "$SKIP"
 [[ "$FAIL" -eq 0 ]]
