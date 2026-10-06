@@ -1,0 +1,22 @@
+# LocalStack echoes referenced SG ids as "<account>/sg-..." and drops descriptions,
+# and has no ModifySecurityGroupRules; ignore that drift in the demo only.
+resource "aws_vpc_security_group_egress_rule" "bastion_ssh_to_web" {
+  lifecycle {
+    ignore_changes = [description, referenced_security_group_id]
+  }
+}
+resource "aws_vpc_security_group_egress_rule" "bastion_http_to_web" {
+  lifecycle {
+    ignore_changes = [description, referenced_security_group_id]
+  }
+}
+resource "aws_vpc_security_group_ingress_rule" "web_ssh_from_bastion" {
+  lifecycle {
+    ignore_changes = [description, referenced_security_group_id]
+  }
+}
+resource "aws_vpc_security_group_ingress_rule" "web_http_from_bastion" {
+  lifecycle {
+    ignore_changes = [description, referenced_security_group_id]
+  }
+}

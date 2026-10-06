@@ -1,0 +1,13 @@
+# LocalStack Community does not implement logs:PutQueryDefinition; skip the saved queries in the demo only.
+resource "aws_cloudwatch_query_definition" "top_rejected_sources" {
+  count = 0
+}
+resource "aws_cloudwatch_query_definition" "ssh_attempts" {
+  count = 0
+}
+resource "aws_cloudwatch_query_definition" "private_subnet_egress" {
+  count = 0
+}
+output "query_definition_names" {
+  value = []
+}
