@@ -5,14 +5,16 @@ provider "aws" {
   # instance role). Nothing is configured or stored here.
 
   default_tags {
+    # Fixed tags come last so extra_tags cannot override the inventory tags
+    # that cost-check.sh relies on.
     tags = merge(
+      var.extra_tags,
       {
         Project     = "SecureVPC"
         Environment = var.environment
         ManagedBy   = "Terraform"
         Repository  = "github.com/Mighiana/SecureVPC"
       },
-      var.extra_tags,
     )
   }
 }

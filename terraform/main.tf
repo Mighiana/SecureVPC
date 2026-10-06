@@ -50,9 +50,9 @@ module "compute" {
   web_sg_id         = module.security.web_sg_id
   ssh_public_key    = trimspace(var.ssh_public_key)
 
-  # The web server installs nginx from the internet at boot, so the NAT path
-  # must exist before it starts.
-  depends_on = [module.network]
+  # The web server installs httpd from the internet at first boot, so the NAT
+  # route and the security-group egress rules must exist before it launches.
+  depends_on = [module.network, module.security]
 }
 
 module "flow_logs" {

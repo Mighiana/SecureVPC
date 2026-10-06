@@ -19,6 +19,8 @@ echo "Elastic IPs:"
 aws ec2 describe-addresses --filters "$TAG" --query 'Addresses[].[AllocationId,PublicIp]' --output text
 echo "VPCs:"
 aws ec2 describe-vpcs --filters "$TAG" --query 'Vpcs[].VpcId' --output text
-echo "Log groups:"
-aws logs describe-log-groups --log-group-name-prefix "/securevpc" --query 'logGroups[].logGroupName' --output text
+# Tag-based, so renamed deployments (project_name) and a retained S3 archive are still found.
+echo "Log groups and S3 buckets:"
+aws resourcegroupstaggingapi get-resources --tag-filters Key=Project,Values=SecureVPC \
+  --resource-type-filters logs:log-group s3 --query 'ResourceTagMappingList[].ResourceARN' --output text
 echo "(Empty sections = nothing left. KMS keys show as PendingDeletion for 7 days and are not billed in that state.)"

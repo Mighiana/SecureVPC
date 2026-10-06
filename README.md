@@ -224,7 +224,7 @@ after `apply` before testing HTTP.
 |---|---|---|---|
 | 1 | Bastion reachable from admin IP | `$(terraform -chdir=terraform output -raw ssh_bastion_command)` | shell on bastion |
 | 2 | Web server via bastion only | `$(terraform -chdir=terraform output -raw ssh_web_via_bastion_command)` | shell on web server |
-| 3 | HTTP from bastion | `$(terraform -chdir=terraform output -raw curl_web_via_bastion_command)` | `<h1>Secure Web Server</h1>` |
+| 3 | HTTP from bastion | `$(terraform -chdir=terraform output -raw curl_web_via_bastion_command)` | `<h1>Secure Web Server</h1>` followed by `<!-- <name> -->` |
 | 4 | No direct path from outside | `curl -m 5 http://<web_private_ip>` from your workstation | times out |
 | 5 | Web server has no public IP | `terraform -chdir=terraform output web_public_ip` | `""` |
 | 6 | Egress goes through NAT | `$(terraform -chdir=terraform output -raw check_nat_egress_command)` | equals `nat_public_ip` |
@@ -247,12 +247,14 @@ make cost-check REGION=us-east-1
 ```
 
 `cost-check.sh` lists any remaining resources tagged `Project=SecureVPC`: instances, NAT Gateways,
-Elastic IPs, VPCs and log groups. It should print nothing under each heading. Notes:
+Elastic IPs, VPCs, log groups and S3 buckets. It should print nothing under each heading. Notes:
 
 - A NAT Gateway takes a few minutes to delete. `destroy` waits for it.
 - With KMS enabled, the key enters a **7-day pending-deletion** window and isn't billed during it.
-- With the S3 archive enabled, `destroy` fails on a non-empty bucket unless
-  `s3_archive_force_destroy = true`. That is deliberate, so logs aren't lost by accident.
+- With the S3 archive enabled, `destroy` empties and deletes the bucket by default
+  (`s3_archive_force_destroy = true`), so the lab tears down completely. To keep archived logs, set
+  it to `false`. `destroy` then stops at the non-empty bucket, and `cost-check.sh` keeps listing it
+  until you remove it.
 
 ## Cost awareness
 
