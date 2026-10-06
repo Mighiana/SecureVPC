@@ -265,6 +265,17 @@ run "rejects_certificate_without_hostname" {
   expect_failures = [var.web_hostname]
 }
 
+run "rejects_invalid_web_hostname" {
+  command = plan
+
+  variables {
+    certificate_arn = "arn:aws:acm:us-east-1:123456789012:certificate/00000000-0000-0000-0000-000000000000"
+    web_hostname    = "-demo.example.com"
+  }
+
+  expect_failures = [var.web_hostname]
+}
+
 run "rejects_wildcard_or_url_egress" {
   command = plan
 

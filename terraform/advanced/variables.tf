@@ -196,7 +196,7 @@ variable "web_hostname" {
   default     = null
 
   validation {
-    condition     = var.web_hostname == null || can(regex("^([a-z0-9-]+\\.)+[a-z]{2,}$", var.web_hostname))
+    condition     = var.web_hostname == null || (length(coalesce(var.web_hostname, "x")) <= 253 && can(regex("^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\\.)+[a-z]{2,63}$", coalesce(var.web_hostname, "x"))))
     error_message = "web_hostname must be a plain DNS name such as demo.example.com."
   }
 

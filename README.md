@@ -388,7 +388,7 @@ the same segmentation idea further. The 2025 build had none of it, and it **has 
 - **Route 53 Resolver DNS Firewall:** threat lists blocked, walled garden, fail closed, queries logged.
 - **VPC endpoints with endpoint policies** for SSM, Logs, KMS and S3.
 - **Detection:** flow logs v5 → S3 Parquet → Athena, plus five CloudWatch alarms → SNS.
-- **Validation:** 17 offline `terraform test` runs, `make adv-verify`, and Reachability Analyzer
+- **Validation:** 18 offline `terraform test` runs, `make adv-verify`, and Reachability Analyzer
   paths (`make reachability`).
 
 It costs roughly USD 23/day with the defaults, mainly Network Firewall. Full details, deployment,

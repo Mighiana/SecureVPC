@@ -3,7 +3,7 @@
 > **Provenance.** This profile is new design work from October 2026. It was **not** part of the
 > 2025 console build. The faithful reconstruction of that build is still in [`terraform/`](../terraform/).
 > This profile lives in [`terraform/advanced/`](../terraform/advanced/).
-> **It has not been deployed to AWS.** It passes `fmt`, `validate`, 17 offline `terraform test`
+> **It has not been deployed to AWS.** It passes `fmt`, `validate`, 18 offline `terraform test`
 > runs against a mocked provider, TFLint and Checkov. Nothing here has been run against real AWS.
 
 ![SecureVPC advanced architecture](architecture-advanced.png)
