@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Static checks. Needs no AWS credentials and creates nothing.
-#   terraform fmt / validate / test (mocked provider), tflint, checkov
+#   terraform fmt / validate / test (mocked provider), tflint, checkov, shellcheck
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -33,6 +33,13 @@ if command -v checkov >/dev/null 2>&1; then
   checkov -d "$TF_DIR" --framework terraform --compact --quiet
 else
   echo "checkov not installed - skipping (pip install checkov)"
+fi
+
+if command -v shellcheck >/dev/null 2>&1; then
+  step "shellcheck"
+  shellcheck "$ROOT"/scripts/*.sh "$ROOT"/terraform/modules/compute/templates/bastion.sh
+else
+  echo "shellcheck not installed - skipping (pip install shellcheck-py)"
 fi
 
 step "all checks passed"

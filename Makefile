@@ -1,10 +1,13 @@
 TF_DIR := terraform
 TF     := terraform -chdir=$(TF_DIR)
 
-.PHONY: help init fmt check test plan apply output verify destroy cost-check
+.PHONY: help bootstrap init fmt check test plan apply output verify destroy cost-check
 
 help: ## List targets
 	@grep -E '^[a-z-]+:.*##' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
+
+bootstrap: ## Install pinned, checksum-verified dev tools into ~/.local/bin
+	./scripts/bootstrap.sh
 
 init: ## terraform init
 	$(TF) init
@@ -12,7 +15,7 @@ init: ## terraform init
 fmt: ## Format all Terraform files
 	$(TF) fmt -recursive
 
-check: ## fmt-check, validate, test, tflint, checkov (no AWS credentials needed)
+check: ## fmt-check, validate, test, tflint, checkov, shellcheck (no AWS credentials needed)
 	./scripts/check.sh
 
 test: ## Offline terraform test with the mocked AWS provider

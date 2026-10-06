@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   static-checks:
-    name: fmt / validate / test / tflint / checkov
+    name: fmt / validate / test / tflint / checkov / shellcheck
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -53,3 +53,7 @@ jobs:
           framework: terraform
           quiet: true
           compact: true
+
+      - name: shellcheck
+        working-directory: .
+        run: shellcheck scripts/*.sh terraform/modules/compute/templates/bastion.sh
